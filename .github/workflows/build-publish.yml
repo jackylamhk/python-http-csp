@@ -1,22 +1,37 @@
-name: Test/Build/Publish
+name: Build and publish
 on:
   push:
     branches:
-      - dev
       - main
+    paths:
+      - http_csp/**
+      - pyproject.toml
+      - poetry.lock
   pull_request:
     branches:
-      - dev
       - main
+    paths:
+      - http_csp/**
+      - pyproject.toml
+      - poetry.lock
 
 jobs:
-  test:
-    name: Run tests
+  version-tag:
+    name: Version tagging
     runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.tag-version.outputs.new_tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+
+      - name: Determine new version number
+        id: tag-version
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          dry_run: true
+
       - name: Set up Poetry
         uses: snok/install-poetry@v1
         with:
@@ -25,46 +40,37 @@ jobs:
           virtualenvs-in-project: false
           installer-parallel: true
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump Poetry version
+        run: |
+          poetry version ${{ steps.tag-version.outputs.new_version }}
+          git add pyproject.toml
+          git commit -m "chore: Bump poetry version [skip ci]"
+          git push
+
+      - name: Create Git tag
+        run: |
+          git tag ${{ steps.tag-version.outputs.new_tag }}
+          git push origin --tags
+
+      - name: Create Git release if pushed to main
+        if: github.ref_name == 'main'
+        uses: ncipollo/release-action@v1
         with:
-          python-version: 3.11
-          cache: poetry
-      
-      - name: Install dependencies
-        run: poetry install --with dev
-
-      - name: Lint with flake8
-        run: |
-          # stop the build if there are Python syntax errors or undefined names
-          poetry run flake8 . --count --select=E9,F63,F7,F82 \
-            --show-source --statistics
-
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          poetry run flake8 . --count --exit-zero --max-complexity=10 \
-            --max-line-length=127 --statistics
-
-      - name: Run tests
-        run: poetry run pytest
-
-      - name: Dependencies safety check
-        run: |
-          poetry export --without-hashes -f requirements.txt | \
-            poetry run safety check --full-report --stdin
-
-      - name: Create code coverage report
-        uses: MishaKav/pytest-coverage-comment@main
+          tag: ${{ steps.tag-version.outputs.new_tag }}
+          name: Release ${{ steps.tag-version.outputs.new_tag }}
+          body: ${{ steps.tag-version.outputs.changelog }}
 
   build-publish:
     name: Build and publish
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-    needs: test
-    if: |
-      needs.test.result == 'success' &&
-      github.ref_name == 'main' &&
-      github.event_name == 'push'
+    needs: version-tag
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -85,3 +91,9 @@ jobs:
         with:
           verbose: true
           print-hash: true
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          path: dist
+          name: python-package-build
