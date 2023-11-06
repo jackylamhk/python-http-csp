@@ -7,13 +7,6 @@ on:
       - http_csp/**
       - pyproject.toml
       - poetry.lock
-  pull_request:
-    branches:
-      - main
-    paths:
-      - http_csp/**
-      - pyproject.toml
-      - poetry.lock
 
 permissions:
   id-token: write
