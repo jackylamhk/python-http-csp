@@ -15,6 +15,10 @@ on:
       - pyproject.toml
       - poetry.lock
 
+permissions:
+  id-token: write
+  contents: write
+
 jobs:
   version-tag:
     name: Version tagging
@@ -68,8 +72,6 @@ jobs:
   build-publish:
     name: Build and publish
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
     needs: version-tag
     steps:
       - name: Checkout code
