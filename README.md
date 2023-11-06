@@ -6,6 +6,13 @@ A library to make parsing and generating CSP policies a little easier.
 Read more about Content Security Policies: [https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)
 
 
+## Installing
+Install this library from PyPI:
+```bash
+pip3 install http-csp
+```
+
+
 ## Using this library
 
 Parsing a CSP string:
