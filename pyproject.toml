@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "http-csp"
-version = "0.1.0"
+version = "0.1.2"
 description = "HTTP Content Security Policy Manager"
 authors = ["Jacky Lam <jacky.lam@r2studiohk.com>"]
 license = "MIT"
