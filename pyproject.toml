@@ -6,6 +6,9 @@ authors = ["Jacky Lam <jacky.lam@r2studiohk.com>"]
 license = "MIT"
 readme = "README.md"
 
+[tool.poetry.urls]
+repository = "https://github.com/jackylamhk/python-http-csp"
+
 [tool.poetry.dependencies]
 python = ">3.9"
 
