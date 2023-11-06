@@ -59,6 +59,3 @@ jobs:
         run: |
           poetry export --without-hashes -f requirements.txt | \
             poetry run safety check --full-report --stdin
-
-      - name: Create code coverage report
-        uses: MishaKav/pytest-coverage-comment@main
